@@ -71,7 +71,7 @@ settings save adore.set
 settings list > ${master}_${slave}_adore.pars
 export multilook_factor="`cat ${master}_${slave}_adore.pars | grep int_multilook | sed 's/int_multilook="//' | sed 's/"//' | tr " " "/" | sed 's/^/ -M/'`"
 
-
+set -x
 cat ${steps} | while read step
 do
   shout "INFO" "processing $step"
@@ -81,8 +81,10 @@ do
   [ "${res}" != "0" ] && return ${res}
   
   # special handling for TSX
-  [ "${step}" == "m_readfiles" ] && [ ${m_in_method} == TSX ] && sed -i 's#\(.*\)\(TDX-1\)$#\1TSX-1#g' `basename ${master}`.res
-  [ "${step}" == "s_readfiles" ] && [ ${s_in_method} == TSX ] && sed -i 's#\(.*\)\(TDX-1\)$#\1TSX-1#g' `basename ${slave}`.res  
+  [ "${step}" == "m_readfiles" ] && [ ${m_in_method} == ASAR ] && sed -i 's#ASAR$#ERS#g' `basename ${master}`.res
+  [ "${step}" == "s_readfiles" ] && [ ${s_in_method} == ASAR ] && sed -i 's#ASAR$#ERS#g' `basename ${slave}`.res  
+
+
 
 done
 

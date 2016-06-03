@@ -1,5 +1,5 @@
 #!/bin/bash
-
+set -x
 mode=$1
 
 # source the ciop functions (e.g. ciop-log)
@@ -19,7 +19,7 @@ ERR_WRONG_POINT=60
 ERR_WRONG_EXTENT=65
 ERR_MISSION_MASTER=35
 ERR_GETDATA=15
-
+ERR_ADORE_ENV=25
 # add a trap to exit gracefully
 cleanExit () { 
 
@@ -37,6 +37,7 @@ cleanExit () {
     ${ERR_TRACK}) msg="Master and slave have mismatching tracks";;
     ${ERR_ADORE}) msg="Failed during ADORE execution";;
     ${ERR_PUBLISH_RES}) msg="Failed results publish";;
+    ${ERR_ADORE_ENV}) msg="Error creating ADORE environment";;
     *|${ERR_UNKNOWN}) msg="Unknown error";;
   esac
 
@@ -69,7 +70,8 @@ set_env() {
 
   # shorter temp path 
   export TMPDIR=/tmp/$( uuidgen )
-  mkdir -p ${TMPDIR}
+  mkdir -p ${TMPDIR}/master
+  mkdir -p ${TMPDIR}/slave
   return $?
 }
 
@@ -147,18 +149,30 @@ get_data() {
   local enclosure
   local res
 
-  enclosure="$( opensearch-client -f atom "${ref}" enclosure)"
+  enclosure="$( opensearch-client  "${ref}" enclosure | tail -1 )"
   # opensearh client doesn't deal with local paths
   res=$?
   [ $res -eq 0 ] && [ -z "${enclosure}" ] && return ${ERR_GETDATA}
   [ $res -ne 0 ] && enclosure=${ref}
   
-  enclosure=$(echo "${enclosure}" | tail -1)
-  local_file="$( echo ${enclosure} | ciop-copy -f -U -O ${target} - 2> /dev/null )"
+  local_file="$( echo ${enclosure} | ciop-copy -f -O ${target} -  )"
   res=$?
 
   [ ${res} -ne 0 ] && return ${res}
-  echo ${local_file}
+  
+  extesion="${local_file##*.}"
+
+  [ "$extesion" == "tar" ] && tar -xf $local_file -C ${target} && rm ${target}/$local_file
+
+  [ ${res} -ne 0 ] && return ${res} 
+
+  EXTRACTED_LFILE="$(find ${target} -name "*.E2" )" #just a test
+  
+  ciop-log "INFO" "Tricking ERS..."
+  sed -i "1 s/SAR/ASA/" ${EXTRACTED_LFILE}
+  [ ${res} -ne 0 ] && return ${res}
+
+  echo ${EXTRACTED_LFILE}
 }
 
 publish_result() {
@@ -186,17 +200,19 @@ main() {
   slave_ref="$1"
 
   ciop-log "INFO" "Retrieving master"  
-  master=$( get_data ${master_ref} ${TMPDIR} )
+  master=$( get_data ${master_ref} ${TMPDIR}/master )
   [ $? -ne 0 ] && return ${ERR_MASTER}
 
   ciop-log "INFO" "Retrieving slave"
-  slave=$( get_data ${slave_ref} ${TMPDIR} )
+  slave=$( get_data ${slave_ref} ${TMPDIR}/slave )
   [ $? -ne 0 ] && return ${ERR_SLAVE}
 
-  mission=$( get_mission $master | tr "A-Z" "a-z" )
+  #mission=$( get_mission $master | tr "A-Z" "a-z" )
+  mission=ers2
   [ $? -ne 0 ] && return ${ERR_MISSION_MASTER}
 
-  ciop-log "INFO" "Create environment for Adore"
+  ciop-log "INFO" "Create environment for Adore ${TMPDIR}"
+  
   TMPDIR=$( create_env_adore ${master} ${slave} ${TMPDIR} )
   res=$?
 
