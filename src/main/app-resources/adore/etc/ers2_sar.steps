@@ -1,0 +1,43 @@
+m_readfiles
+s_readfiles
+m_porbits
+s_porbits
+m_crop
+s_crop
+coarseorb
+dem make SRTM3 200 default
+check
+m_simamp
+m_timing
+coarsecorr
+fine
+demassist
+coregpm
+resample
+interfero
+comprefpha
+subtrrefpha
+comprefdem
+subtrrefdem
+coherence
+unwrap
+slant2h
+geocode
+raster p subtrrefdem $multilook_factor 
+raster p subtrrefpha $multilook_factor 
+raster p interfero $multilook_factor
+raster p coherence $multilook_factor -cgray -b
+raster p unwrap $multilook_factor
+raster a subtrrefdem $multilook_factor
+raster a subtrrefpha $multilook_factor
+raster a interfero $multilook_factor
+raster a coherence $multilook_factor -cgray -b
+raster m subtrrefdem $multilook_factor
+raster m subtrrefpha $multilook_factor
+raster m interfero $multilook_factor
+raster m coherence $multilook_factor -cgray -b
+saveas gdal p subtrrefdem -of GTiff ${master}_${slave}_srd.tiff
+saveas gdal p subtrrefpha -of GTiff ${master}_${slave}_srp.tiff
+saveas gdal p interfero -of GTiff ${master}_${slave}_cint.tiff
+saveas gdal p coherence -of GTiff ${master}_${slave}_coh.tiff
+saveas gdal p unwrap -of GTiff ${master}_${slave}_uw.tiff
