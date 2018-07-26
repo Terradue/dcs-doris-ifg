@@ -216,7 +216,11 @@ main() {
   ciop-log "INFO" "Launching adore for ${mission}"
   cd $TMPDIR
   adore "p ${_CIOP_APPLICATION_PATH}/adore/libexec/ifg.adr ${_CIOP_APPLICATION_PATH}/adore/etc/${mission}.steps ${mission}"
-  [ $? -ne 0 ] && return ${ERR_ADORE}
+  
+  res=$?
+  publish_result log
+
+  [ $res -ne 0 ] && return ${ERR_ADORE}
 
   publish_result int || return $?
  
