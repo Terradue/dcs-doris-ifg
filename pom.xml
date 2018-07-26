@@ -24,6 +24,7 @@
     <yumRepo>geohazards-tep</yumRepo>
     <mission/>
   </properties>
+<!--
   <repositories>
     <repository>
       <id>repository.terradue.com</id>
@@ -43,6 +44,7 @@
       <url>http://repository.terradue.com/artifactory/libs-release-public</url>
     </pluginRepository>
   </pluginRepositories>
+-->
   <profiles>
     <profile>
       <id>package-app</id>
@@ -60,10 +62,12 @@
             <executions>
               <execution>
                 <id>generate-rpm</id>
+				 <phase>compile</phase>
                 <goals>
                   <goal>rpm</goal>
                 </goals>
                 <configuration>
+<!--
                   <mappings combine.children="append">
                     <mapping>
                       <directory>/application/application.xml</directory>
@@ -74,6 +78,7 @@
                       </sources>
                     </mapping>
                   </mappings>
+-->
                   <!-- Set here the dependencies installed with 'sudo yum install'-->
                   <requires>
                     <require>adore-t2</require>
