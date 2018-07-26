@@ -20,7 +20,7 @@ ERR_WRONG_EXTENT=65
 ERR_MISSION_MASTER=35
 ERR_GETDATA=15
 
-#set -x
+set -x
 
 # add a trap to exit gracefully
 cleanExit () { 
