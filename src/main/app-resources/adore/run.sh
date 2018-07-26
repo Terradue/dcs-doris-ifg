@@ -20,6 +20,8 @@ ERR_WRONG_EXTENT=65
 ERR_MISSION_MASTER=35
 ERR_GETDATA=15
 
+#set -x
+
 # add a trap to exit gracefully
 cleanExit () { 
 
@@ -147,14 +149,13 @@ get_data() {
   local enclosure
   local res
 
-  enclosure="$( opensearch-client -f atom "${ref}" enclosure)"
+  enclosure="$( opensearch-client -f atom  "${ref}" enclosure | tail -1 )"
   # opensearh client doesn't deal with local paths
   res=$?
   [ $res -eq 0 ] && [ -z "${enclosure}" ] && return ${ERR_GETDATA}
   [ $res -ne 0 ] && enclosure=${ref}
   
-  enclosure=$(echo "${enclosure}" | tail -1)
-  local_file="$( echo ${enclosure} | ciop-copy -f -U -O ${target} - 2> /dev/null )"
+  local_file="$( echo ${enclosure} | ciop-copy -f -U -O ${target} -  )"
   res=$?
 
   [ ${res} -ne 0 ] && return ${res}
@@ -193,6 +194,7 @@ main() {
   slave=$( get_data ${slave_ref} ${TMPDIR} )
   [ $? -ne 0 ] && return ${ERR_SLAVE}
 
+  
   mission=$( get_mission $master | tr "A-Z" "a-z" )
   [ $? -ne 0 ] && return ${ERR_MISSION_MASTER}
 
